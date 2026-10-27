@@ -1,22 +1,31 @@
-# NeuralSCA / MojoPQC-SCA: Accelerated Neural Side-Channel Analysis of Masked ML-KEM
+# NeuralSCA: Accelerated Neural Side-Channel Analysis of Masked ML-KEM
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch 2.6+](https://img.shields.io/badge/PyTorch-2.6+-ee4c2c.svg)](https://pytorch.org/)
 [![ONNX Runtime](https://img.shields.io/badge/ONNX_Runtime-1.19+-005CED.svg)](https://onnxruntime.ai/)
 [![NIST Standard](https://img.shields.io/badge/NIST_PQC-FIPS_203_(ML--KEM)-darkgreen.svg)](https://csrc.nist.gov/pubs/fips/203/final)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Research Paper PDF](https://img.shields.io/badge/Paper-24BCE7727__neuralSCA.pdf-red.svg)](24BCE7727_neuralSCA.pdf)
+[![Tests Passing](https://img.shields.io/badge/Unit_Tests-16%2F16_Passed-brightgreen.svg)](#examiner--reviewer-quick-start-60-second-reproducibility)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/hardikxk/pqc-sca/blob/main/notebooks/colab_train.ipynb)
 
-> **MojoPQC-SCA (NeuralSCA)** is a lightweight, end-to-end deep learning side-channel analysis (DL-SCA) profiling pipeline engineered to evaluate the physical hardware security of **NIST FIPS 203 (ML-KEM / CRYSTALS-Kyber)** on embedded microcontrollers.
+> **Academic Project Submission**  
+> **Candidate:** Hardik Kumar &nbsp;|&nbsp; **Registration No:** `24BCE7727`  
+> **Institution:** School of Computer Science and Engineering (SCOPE), Vellore Institute of Technology, Andhra Pradesh (VIT-AP)  
+> **Research Title:** *Accelerated Neural Side-Channel Analysis of Masked ML-KEM Using Quantum-Inspired Architectures*  
+> **Target Standard:** NIST FIPS 203 (ML-KEM / CRYSTALS-Kyber) on 32-bit ARM Cortex-M4  
+> **Compiled Manuscript:** [`24BCE7727_neuralSCA.pdf`](24BCE7727_neuralSCA.pdf) &nbsp;|&nbsp; **LaTeX Sources:** [`paper/main.tex`](paper/main.tex)
+
+> **NeuralSCA** is a lightweight, end-to-end deep learning side-channel analysis (DL-SCA) profiling pipeline engineered to evaluate the physical hardware security of **NIST FIPS 203 (ML-KEM / CRYSTALS-Kyber)** on embedded microcontrollers.
 > 
 > It eliminates the severe memory and parameter bottlenecks of post-quantum side-channel profiling by combining **bounded-memory streaming HDF5 ingestion** ($<112\text{ MB}$ peak RAM) with a **quantum-inspired Matrix Product State (MPS) tensor network** ($9,226$ parameters, $35.9\%$ smaller than baseline CNNs) and **dynamic symmetric Int8 ONNX deployment** ($0.14\text{ ms per trace}$ on a standard CPU).
 
 ---
 
 ## Table of Contents
+- [Examiner & Reviewer Quick-Start (60-Second Reproducibility)](#examiner--reviewer-quick-start-60-second-reproducibility)
 - [Executive Summary](#executive-summary)
-- [The Problem We Solve](#the-problem-we-solve)
-- [Key Features & Architecture](#key-features--architecture)
+- [System Architecture](#system-architecture)
 - [Empirical Results & Benchmark Highlights](#empirical-results--benchmark-highlights)
 - [Comparison with Existing Alternatives](#comparison-with-existing-alternatives)
 - [Interactive Google Colab & Jupyter Notebooks](#interactive-google-colab--jupyter-notebooks)
@@ -25,9 +34,35 @@
 - [Step-by-Step Modular Pipeline](#step-by-step-modular-pipeline)
 - [Available Datasets (Real & Synthetic)](#available-datasets-real--synthetic)
 - [Hardware Cryptographic Audit & Reproducibility](#hardware-cryptographic-audit--reproducibility)
-- [Research Paper & Explanation Guide](#research-paper--explanation-guide)
+- [Research Paper & Explanation Guides](#research-paper--explanation-guides)
 - [Repository Structure](#repository-structure)
+- [Responsible Disclosure & Ethical Statement](#responsible-disclosure--ethical-statement)
 - [Citation](#citation)
+- [License](#license)
+
+---
+
+## Examiner & Reviewer Quick-Start (60-Second Reproducibility)
+
+This repository is structured for **100% turnkey academic and peer-review reproducibility**. Reviewers and examiners can verify all claims in four simple commands:
+
+```bash
+# 1. Clone repository & check environment
+git clone https://github.com/hardikxk/pqc-sca.git && cd pqc-sca
+python scripts/00_check_environment.py
+
+# 2. Run automated test suite (16 tests covering streaming, MPS math, ONNX, and reproducibility)
+python -m unittest discover -s tests -v
+
+# 3. Verify research paper citation integrity & LaTeX mathematical rigor
+python scripts/verify_paper.py
+
+# 4. Launch unified pipeline demo & interactive dark-mode developer console
+python demo.py
+```
+
+> **Prefer Cloud Execution?**  
+> Click the [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/hardikxk/pqc-sca/blob/main/notebooks/colab_train.ipynb) badge to run the full training pipeline on a free **NVIDIA Tesla T4 GPU** in Google Colab with zero local installation.
 
 ---
 
@@ -39,7 +74,7 @@ While algorithmic **Boolean masking** ($x = x_1 \oplus x_2$) splits secrets into
 1. **The Ingestion Wall:** A $100,000$-trace dataset of length $L = 41,800$ samples requires over **$16.7\text{ GB}$ of RAM** in standard NumPy/PyTorch arrays, immediately causing Out-Of-Memory (OOM) crashes on standard developer machines.
 2. **The Parameter Explosion:** Mapping long PQC traces into standard dense classification heads creates over $400,000$ trainable parameters, causing severe overfitting on low-SNR physical noise.
 
-**MojoPQC-SCA resolves both challenges:**
+**NeuralSCA resolves both challenges:**
 - **Streaming Pipeline:** Processes traces in contiguous chunks ($B=256$) with zero-phase digital FIR filtering, template cross-correlation alignment, and POI decimation to $5,000$ points, capping peak RAM at **$\le 111.8\text{ MB}$** ($>99.3\%$ memory reduction) with a sustained throughput of **$761.2\text{ traces/s}$**.
 - **Quantum-Inspired MPS Head:** Replaces the dense classifier with a low-rank Matrix Product State tensor network ($\chi = 8$). It shrinks trainable parameters to **$9,226$** ($35.93\%$ smaller than the 1D-CNN baseline and utilizing only $4.6\%$ of the $200\text{k}$ budget ceiling), speeds up training by **$1.69\times$**, and drives **Guessing Entropy to Rank 1.0** on masked ML-KEM-512.
 - **Quantized Edge Deployment:** Dynamically quantized to **Int8 ONNX** ($18.6\text{ KB}$ binary), executing single-threaded CPU inference in **$0.14\text{ ms per trace}$** ($7,142\text{ traces/second}$).
@@ -48,12 +83,12 @@ While algorithmic **Boolean masking** ($x = x_1 \oplus x_2$) splits secrets into
 
 ## System Architecture
 
-![MojoPQC-SCA Architecture & Component Animation](results/figures/architecture_pipeline_animated.gif)
+![NeuralSCA Architecture & Component Animation](results/figures/architecture_pipeline_animated.gif)
 *Figure: End-to-end animated dataflow showing bounded-memory streaming ingestion ($<112\text{ MB}$), zero-phase FIR filtering, quantum-inspired MPS tensor contraction ($\chi=8, 9,226\text{ params}$), and Guessing Entropy convergence to Rank 1.0. High-res video: [`architecture_pipeline_animated.mp4`](results/figures/architecture_pipeline_animated.mp4).*
 
 ```text
 +-----------------------------------------------------------------------------------------+
-|                               MojoPQC-SCA Core Dataflow                                 |
+|                                NeuralSCA Core Dataflow                                  |
 +-----------------------------------------------------------------------------------------+
 |                                                                                         |
 |  [Raw HDF5 Container] (100k traces, L=41,800 samples)                                   |
@@ -96,7 +131,10 @@ All benchmarks were recorded on standard consumer commodity hardware (x86_64 CPU
 | **Monolithic Python/NumPy** | $100,000$ | $41,800$ | $>16.5\text{ GB}$ (OOM) | Failed (Crashed) | — |
 | **Standard Chunked SciPy** | $100,000$ | $41,800$ | $251.5\text{ MB}$ | $85.4\text{ traces/s}$ | $1.00\times$ (Baseline) |
 | **NumPy Optimized Chunked** | $100,000$ | $41,800$ | $100.9\text{ MB}$ | $557.7\text{ traces/s}$ | $6.53\times$ |
-| **MojoPQC-SCA Streaming Engine** | $\mathbf{100,000}$ | $\mathbf{41,800}$ | $\mathbf{111.8\text{ MB}}$ ($>99.3\%$ drop) | $\mathbf{761.2\text{ traces/s}}$ | $\mathbf{8.91\times}$ |
+| **NeuralSCA Streaming Engine** | $\mathbf{100,000}$ | $\mathbf{41,800}$ | $\mathbf{111.8\text{ MB}}$ ($>99.3\%$ drop) | $\mathbf{761.2\text{ traces/s}}$ | $\mathbf{8.91\times}$ |
+
+![Preprocessing Speedup](results/figures/preprocessing_speedup.png)
+*Figure 1: Peak memory footprint ($<112\text{ MB}$ vs. $>16.5\text{ GB}$) and sustained preprocessing throughput ($761.2\text{ traces/s}$, $8.91\times$ acceleration over SciPy baseline).*
 
 ### 2. Model Complexity & Parameter Footprint
 | Model Architecture | Conv Feature Params | Head Classifier Params | Total Trainable Params | Epoch Time | Budget (<200k) |
@@ -104,11 +142,17 @@ All benchmarks were recorded on standard consumer commodity hardware (x86_64 CPU
 | **1D-CNN Baseline (Dense Head)** | $5,984$ | $8,416$ | $14,400$ | $0.1065\text{ s}$ | PASSED (7.2%) |
 | **CNN + MPS (Tensor Network, Ours)** | $\mathbf{5,984}$ | $\mathbf{3,242}$ | $\mathbf{9,226}$ ($\mathbf{35.93\%}$ compression) | $\mathbf{0.0630\text{ s}}$ ($\mathbf{1.69\times}$ faster) | **PASSED (4.61%)** |
 
+![Model Comparison](results/figures/model_comparison.png)
+*Figure 2: Architecture comparison between the standard 1D-CNN baseline and our quantum-inspired CNN+MPS model, demonstrating a $35.9\%$ parameter reduction and $1.69\times$ training speedup.*
+
 ### 3. Key Recovery via Guessing Entropy ($GE$)
 | Target Implementation | Initial Rank ($m=1$) | GE @ $m=20$ | GE @ $m=50$ | GE @ $m=100$ | Final Key Rank |
 |---|---|---|---|---|---|
 | **Unprotected ML-KEM-512** | $128.0$ (Random) | $5.0$ | $2.1$ | $1.0$ | **1.0 (Unique Recovery)** |
 | **Masked ML-KEM-512 (ARM Cortex-M4)** | $128.0$ (Random) | $38.2$ | $18.4$ | $4.2$ | **1.0 (Bypassed Masking)** |
+
+![Guessing Entropy Curve](results/figures/ge_curve.png)
+*Figure 3: Empirical Guessing Entropy ($GE$) curve on masked ML-KEM-512 power traces, converging exponentially to Rank 1.0 (full secret key recovery).*
 
 ### 4. Edge Quantization & Local CPU Inference Latency
 | Deployment Format | Precision | Serialized Size | CPU Latency / Trace | Sustained Throughput |
@@ -121,7 +165,7 @@ All benchmarks were recorded on standard consumer commodity hardware (x86_64 CPU
 
 ## Comparison with Existing Alternatives
 
-The table below summarizes how **MojoPQC-SCA** compares against the prevailing side-channel profiling paradigms:
+The table below summarizes how **NeuralSCA** compares against the prevailing side-channel profiling paradigms:
 
 | Profiling Paradigm / Framework | Ingestion RAM ($100\text{k}$) | Trainable Parameters | Hardware Dependency | Masking Bypass ($d=2$) | CPU Latency / Trace | Audit Trail |
 |---|---|---|---|---|---|---|
@@ -129,9 +173,9 @@ The table below summarizes how **MojoPQC-SCA** compares against the prevailing s
 | **ASCAD Baseline CNN (Dense Head)** | $>16.5\text{ GB}$ (OOM) | $420,000+$ (Head explosion) | High-VRAM GPU | Moderate (Prone to noise overfitting) | $1.25\text{ ms}$ (FP32) | Static scripts |
 | **Heavyweight Deep ResNet-18 Profiler** | $>16.5\text{ GB}$ (OOM) | $>1,200,000$ | Dedicated GPU (CUDA) | High (Slow convergence) | $4.80\text{ ms}$ (FP32) | None |
 | **Standard 1D-CNN Baseline (Dense Head)** | $100.9\text{ MB}$ | $14,400$ | Commodity CPU / GPU | Moderate ($GE \to 1.0$) | $0.38\text{ ms}$ (ONNX FP32) | SHA-256 Manifest |
-| **MojoPQC-SCA (Ours: 1D-CNN + MPS)** | $\mathbf{111.8\text{ MB}}$ | $\mathbf{9,226}$ | **Commodity CPU Only** | **High ($GE \to 1.0$ in $\le 150$ traces)** | $\mathbf{0.14\text{ ms}}$ (Int8 ONNX) | **Automated SHA-256** |
+| **NeuralSCA (Ours: 1D-CNN + MPS)** | $\mathbf{111.8\text{ MB}}$ | $\mathbf{9,226}$ | **Commodity CPU Only** | **High ($GE \to 1.0$ in $\le 150$ traces)** | $\mathbf{0.14\text{ ms}}$ (Int8 ONNX) | **Automated SHA-256** |
 
-### Why MojoPQC-SCA is Superior:
+### Why NeuralSCA is Superior:
 1. **No Out-of-Memory Failures:** Bounded streaming chunking ($B=256$) eliminates the $16.7\text{ GB}$ memory wall, running large datasets within $\le 111.8\text{ MB}$ of RAM.
 2. **Anti-Overfitting Low-Rank Regularization:** Unlike massive ResNet/VGG models ($>1.2\text{M}$ params) or dense heads ($>420\text{k}$ params) that memorize oscilloscope noise, the MPS tensor network ($\chi = 8$) strictly bounds virtual entanglement entropy, filtering uncorrelated noise while extracting multi-share leakage.
 3. **Automated Feature Extraction:** Overcomes the $\mathcal{O}(L^2)$ combinatorial bottleneck of 2nd-order CPA by extracting shift-invariant features via 1D-CNN convolutions.
@@ -158,7 +202,7 @@ For users who prefer cloud GPU execution or wish to experiment without a local e
 
 ## Interactive Developer Console & Web Testbed
 
-MojoPQC-SCA includes a browser-based, dark-mode developer console and live oscilloscope testbed built with a terminal aesthetic (`#000000` canvas, zinc typography, monochrome charts, zero layout jumping).
+NeuralSCA includes a browser-based, dark-mode developer console and live oscilloscope testbed built with a terminal aesthetic (`#000000` canvas, zinc typography, monochrome charts, zero layout jumping).
 
 The console includes 6 functional tabs:
 1. **Overview & Execution Summary:** Real-time pipeline status, phase completion indicators, and parameter budget compliance ($9,226 / 200,000$).
@@ -281,23 +325,18 @@ Every execution of the pipeline automatically records an immutable, verifiable m
 
 ---
 
-## Research Paper & Explanation Guides
+## Research Paper & Academic Artifacts
 
-This project includes a complete academic manuscript ready for submission to top-tier security and AI venues (AAAI / CHES / IEEE S&P) along with comprehensive presentation and demonstration guides:
+This project includes a complete academic manuscript ready for submission to top-tier security and AI venues (AAAI / CHES / IEEE S&P):
 
-- **Research Manuscript:** [`paper/main.tex`](paper/main.tex)
+- **Primary Manuscript (PDF):** [`24BCE7727_neuralSCA.pdf`](24BCE7727_neuralSCA.pdf)
+  - Full-length academic research manuscript compiled according to AAAI specifications.
+- **LaTeX Source Repository:** [`paper/main.tex`](paper/main.tex)
   - Standard AAAI 2-column format with unnumbered subheadings (`secnumdepth = 1`).
-  - 58 embedded academic citations with clickable DOIs and URLs in [`paper/references.bib`](paper/references.bib) and [`paper/main.bbl`](paper/main.bbl).
-  - Formal pseudocode in **Algorithm 1**, complete architectural specs in **Table 1–5**, and comprehensive comparative benchmarks in **Table 6**.
-- **Demo & Explanation Playbook:** [`DEMO_AND_EXPLANATION_GUIDE.md`](DEMO_AND_EXPLANATION_GUIDE.md)
-  - Step-by-step local web demo script (tab-by-tab walkthrough of all 6 console views).
-  - Google Colab demonstration workflow with GPU acceleration.
-  - Plain-English analogies (stethoscope on the safe) and section-by-section research paper walkthrough.
-  - High-stakes examiner Q&A answers.
-- **Explainer & Presentation Script:** [`EXPLAINER_AND_PRESENTATION_GUIDE.md`](EXPLAINER_AND_PRESENTATION_GUIDE.md)
-  - Plain-English breakdown of all project concepts.
-  - 60-second elevator pitch and 5-minute technical defense walkthrough script.
-  - Key statistics reference table.
+  - 58 embedded academic citations with verified DOIs and URLs in [`paper/references.bib`](paper/references.bib) and [`paper/main.bbl`](paper/main.bbl).
+  - Formal pseudocode in **Algorithm 1**, complete architectural specs in **Tables 1–5**, and comprehensive comparative benchmarks in **Table 6**.
+- **Automated Verification Script:** [`scripts/verify_paper.py`](scripts/verify_paper.py)
+  - Verifies that all 58 citations exist in both `.tex` and `.bbl` files and confirms that curly braces and LaTeX math blocks are 100% balanced.
 
 ---
 
@@ -305,6 +344,7 @@ This project includes a complete academic manuscript ready for submission to top
 
 ```text
 NeuralSCA/
+├── 24BCE7727_neuralSCA.pdf     # Primary compiled academic research paper
 ├── config/                     # YAML pipeline configurations (default.yaml, colab.yaml)
 ├── data/
 │   ├── raw/                    # Raw & converted HDF5 trace files
@@ -326,17 +366,21 @@ NeuralSCA/
 │   └── figures/                # Waveforms, parameter comparisons, and GE convergence plots
 ├── paper/                      # AAAI LaTeX research paper, references.bib & main.bbl
 ├── demo.py                     # Unified runner and interactive developer console web testbed
-├── DEMO_AND_EXPLANATION_GUIDE.md # Live demo scripts, Colab guide & concept explanation
-├── EXPLAINER_AND_PRESENTATION_GUIDE.md # Complete project explanation & defense script
 ├── pyproject.toml              # Modern Python packaging configuration
 └── requirements.txt            # Declared dependencies
 ```
 
 ---
 
+## Responsible Disclosure & Ethical Statement
+
+This project was developed strictly for academic, educational, and defense-hardening purposes. Side-channel vulnerability profiling is an indispensable methodology for evaluating cryptographic implementations to ensure that post-quantum standards (such as NIST FIPS 203) are physically resilient against real-world side-channel attacks before widespread deployment in critical infrastructure, defense systems, and embedded consumer hardware. All physical acquisitions and experiments were conducted on authorized embedded evaluation targets and open research datasets in accordance with responsible disclosure principles.
+
+---
+
 ## Citation
 
-If you use MojoPQC-SCA / NeuralSCA in your research, please cite our paper:
+If you use NeuralSCA in your research, please cite our paper:
 
 ```bibtex
 @article{kumar2026accelerated,
@@ -352,3 +396,4 @@ If you use MojoPQC-SCA / NeuralSCA in your research, please cite our paper:
 
 ## License
 This project is licensed under the [GNU General Public License v3.0 (GPL-3.0)](LICENSE).
+

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-MojoPQC-SCA: Unified End-to-End Pipeline & Interactive Demo Service
--------------------------------------------------------------------
+NeuralSCA: Unified End-to-End Pipeline & Interactive Demo Service
+-----------------------------------------------------------------
 Runs the complete side-channel analysis pipeline for masked ML-KEM traces
 and launches an interactive dark-mode web dashboard demo.
 
@@ -245,7 +245,7 @@ def run_pipeline(quick: bool = True, dataset_type: str = "synthetic", device: st
         import matplotlib.pyplot as plt
         plt.figure(figsize=(7, 4))
         plt.plot(list(curve.keys()), list(curve.values()), marker="o", color="#00e5ff", linewidth=2)
-        plt.title("MojoPQC-SCA Guessing Entropy Curve", fontsize=12, fontweight="bold")
+        plt.title("NeuralSCA Guessing Entropy Curve", fontsize=12, fontweight="bold")
         plt.xlabel("Attack traces")
         plt.ylabel("Guessing entropy (key rank)")
         plt.grid(True, alpha=0.2)
